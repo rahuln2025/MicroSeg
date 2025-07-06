@@ -8,12 +8,17 @@ dataloader:
   num_workers: 1
 
 training:
-  epochs: 10
+  epochs: 250
   learning_rate: 2e-4
   bce_weight: 0.5
-  patience: 2
-  checkpoint_interval: 2
+  patience: 30
+  checkpoint_interval: 10
+  checkpoint_dir: '/data/horse/ws/rana575h-model_training_microseg/checkpoints_6Jul/'
 
 data:
   base_path: "./Super1"
-  val_split: 0.2
+
+dirs:
+  plots_dir: '/data/horse/ws/rana575h-model_training_microseg/plots'
+  loss_logs: '/data/horse/ws/rana575h-model_training_microseg/loss_logs'
+  tensorboard_logs: '/data/horse/ws/rana575h-model_training_microseg/tb_logs'
