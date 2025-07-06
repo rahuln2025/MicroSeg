@@ -47,7 +47,7 @@ def main():
     model, device = setup_segmentation_model(class_values = class_values, config=config)
     
     checkpoint_dir = config['training'].get('checkpoint_dir')
-    best_model_path = best_model_path = os.path.join(checkpoint_dir, 'model_checkpoint_epoch_90.pth')
+    best_model_path = best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
     model.load_state_dict(torch.load(best_model_path))
 
     # evaluate model on test data

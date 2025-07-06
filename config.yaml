@@ -8,8 +8,8 @@ dataloader:
   num_workers: 1
 
 training:
-  epochs: 250
-  learning_rate: 2e-4
+  epochs: 500
+  learning_rate: 5e-5
   bce_weight: 0.5
   patience: 30
   checkpoint_interval: 10
