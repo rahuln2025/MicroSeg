@@ -6,6 +6,10 @@ from torch.utils.data import DataLoader
 import tqdm as tqdm 
 import numpy as np
 import segmentation_models_pytorch as smp
+import os
+from torch.utils.tensorboard import SummaryWriter
+import psutil # for memory profiling
+
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -58,12 +62,18 @@ def train_model(model, train_loader, val_loader, config):
     num_epochs = config['training']['epochs']
     patience = config['training']['patience']
     checkpoint_interval = config['training']['checkpoint_interval']
+    checkpoint_dir = config['training']['checkpoint_dir']
+    loss_logs_dir = config['dirs']['loss_logs']
 
     # Store losses and IoUs for plotting
     train_losses = []
     val_losses = []
     train_ious = []
     val_ious = []
+
+    # setup tensorboard logging
+    log_dir = config['dirs'].get('tensorboard_logs')
+    writer = SummaryWriter(log_dir=log_dir)
 
     scaler = torch.amp.GradScaler('cuda')
     
@@ -124,13 +134,25 @@ def train_model(model, train_loader, val_loader, config):
 
             epoch_loss = running_loss / len(data_loader.dataset)
             epoch_iou = running_iou / len(data_loader.dataset)
-            
+            global_step = epoch
             if phase == 'train':
+                # manual log
                 train_losses.append(epoch_loss)
                 train_ious.append(epoch_iou)
+                # tensorboard log
+                writer.add_scalar('Loss/Train', epoch_loss, global_step)
+                writer.add_scalar('IoU/Train', epoch_iou, global_step)
+
             else:
                 val_losses.append(epoch_loss)
                 val_ious.append(epoch_iou)
+                writer.add_scalar('Loss/Val', epoch_loss, global_step)
+                writer.add_scalar('IoU/Val', epoch_iou, global_step)
+            
+            # Memory profiling
+            process = psutil.Process(os.getpid())
+            mem_mb = process.memory_info().rss / 1024 **2
+            writer.add_scalar(f'Memory/{phase}', mem_mb, global_step)
 
             print(f'{phase} Loss: {epoch_loss:.4f} IoU: {epoch_iou:.4f}')
 
@@ -140,13 +162,15 @@ def train_model(model, train_loader, val_loader, config):
                     best_iou = epoch_iou
                     best_model_wts = model.state_dict()
                     epochs_no_improve = 0
-                    torch.save(model.state_dict(), 'best_model.pth')
+                    best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
+                    torch.save(model.state_dict(), best_model_path)
                 else:
                     epochs_no_improve += 1
 
         # Checkpoint the model every `checkpoint_interval` epochs
         if (epoch + 1) % checkpoint_interval == 0:
             checkpoint_path = f'model_checkpoint_epoch_{epoch + 1}.pth'
+            checkpoint_path = os.path.join(checkpoint_dir, checkpoint_path)
             torch.save(model.state_dict(), checkpoint_path)
             print(f'Model checkpoint saved at {checkpoint_path}')
 
@@ -159,9 +183,11 @@ def train_model(model, train_loader, val_loader, config):
         model.load_state_dict(best_model_wts)
 
     # Save losses and ious for plotting, ensuring tensors are moved to CPU
-    np.save('train_losses.npy', np.array(train_losses))
-    np.save('val_losses.npy', np.array(val_losses))
-    np.save('train_ious.npy', np.array([iou.cpu().numpy() for iou in train_ious]))
-    np.save('val_ious.npy', np.array([iou.cpu().numpy() for iou in val_ious]))
+    np.save(os.path.join(loss_logs_dir, 'train_losses.npy'), np.array(train_losses))
+    np.save(os.path.join(loss_logs_dir, 'val_losses.npy'), np.array(val_losses))
+    np.save(os.path.join(loss_logs_dir, 'train_ious.npy'), np.array([iou.cpu().numpy() for iou in train_ious]))
+    np.save(os.path.join(loss_logs_dir, 'val_ious.npy'), np.array([iou.cpu().numpy() for iou in val_ious]))
 
+    writer.close()
+    
     return model

@@ -52,7 +52,8 @@ def main():
                             num_workers = config['dataloader']['num_workers'])
 
     # visualize the augmentations
-    visualize_augmentations(train_dataset, num_samples = 2)
+    save_path = os.path.join(config['dirs']['plots_dir'], 'augmentation.png')
+    visualize_augmentations(train_dataset, num_samples = 2, save_path = save_path)
 
     # instantiate model
     class_values = [0, 1, 2]
