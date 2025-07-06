@@ -2,3 +2,5 @@
 *.tiff
 *.ckpt
 *.pth
+__pycache__
+*.png
