@@ -1,0 +1,16 @@
+model:
+  name: "resnet50"
+
+dataloader:
+  batch_size: 4
+  shuffle: True
+  num_workers: 1
+
+training:
+  epochs: 100
+  learning_rate: 0.001
+  bce_weight: 0.5
+
+data:
+  base_path: "./Super1"
+  val_split: 0.2
