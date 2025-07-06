@@ -55,44 +55,125 @@ def get_pretrained_microscopynet_url(encoder, encoder_weights, version=1.1,
     return url_base + f'{encoder}{self_supervision}_pretrained_{encoder_weights}' + url_end
 
 
-class SetupSegmentationModel:
-    def __init__(self, encoder_name=None, class_values=None, encoder_weights=None):
-        if class_values is None:
-            raise ValueError("class_values must be provided and should not be None")
+# class SetupSegmentationModel():
+#     def __init__(self, class_values=None, config=None):
+#         if class_values is None:
+#             raise ValueError("class_values must be provided and should not be None")
         
-        # encoder name and weights
-        self.encoder_name = encoder_name
-        self.encoder_weights = encoder_weights
+#         # encoder name and weights
+#         self.encoder_name = config["model"]["name"]
+#         self.encoder_weights = config['model']['weights']
 
-        # number of classes
-        self.num_classes = len(class_values)
+#         # number of classes
+#         self.num_classes = len(class_values)
 
-        # activation function
-        self.activation = 'softmax2d' if self.num_classes > 1 else 'sigmoid'
+#         # activation function
+#         self.activation = 'softmax2d' if self.num_classes > 1 else 'sigmoid'
 
-        # device 
-        self.device = torch.device("cuda" if torch.cuda.is_avaliable() else "cpu")
-        self.map_location = "cuda" if torch.cuda.is_available() else "cpu"
+#         # device 
+#         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#         self.map_location = "cuda" if torch.cuda.is_available() else "cpu"
         
-        # Initialize UNet++ model
-        self.model = UnetPlusPlus(
-            encoder_name = self.encoder_name,
-            encoder_weights = None, # skip default weight loading
-            in_channels=3,
-            classes = self.num_classes,
-            activation = self.activation
-        )
+#         # Initialize UNet++ model
+#         model = UnetPlusPlus(
+#             encoder_name = self.encoder_name,
+#             encoder_weights = None, # skip default weight loading
+#             in_channels=3,
+#             classes = self.num_classes,
+#             activation = self.activation
+#         )
+#         self.model = model
+    
+#     def half(self):
+#         """Convert model to half precision."""
+#         self.model.half()
+#         return self
 
-    def load_pretrained_model(self):
+#     def float(self):
+#         """Convert model to full precision."""
+#         self.model.float()
+#         return self
 
-        url = get_pretrained_microscopynet_url(self.encoder_name, self.encoder_weights)
-        state_dict = model_zoo.load_url(url, map_location = self.map_location)
-        self.model.encoder.load_state_dict(state_dict)
-        self.model.to(self.device)
+#     def parameters(self):
+#         """Return the parameters of the underlying model for optimizer."""
+#         return self.model.parameters()
 
+#     def train(self, mode=True):
+#         """Set the model to training mode."""
+#         self.model.train(mode)
+#         return self
+
+#     def eval(self):
+#         """Set the model to evaluation mode."""
+#         self.model.eval()
+#         return self
+
+#     def state_dict(self):
+#         """Return the state dictionary of the underlying model."""
+#         return self.model.state_dict()
+
+#     def load_state_dict(self, state_dict):
+#         """Load the state dictionary into the underlying model."""
+#         return self.model.load_state_dict(state_dict)
+
+#     def __call__(self, *args, **kwargs):
+#         """Forward pass through the underlying model."""
+#         return self.model(*args, **kwargs)
+
+#     def to(self, device):
+#         """Move the model to the specified device."""
+#         self.model.to(device)
+#         return self
+
+#     def load_pretrained_model(self):
+
+#         url = get_pretrained_microscopynet_url(self.encoder_name, self.encoder_weights)
+#         state_dict = model_zoo.load_url(url, map_location = self.map_location)
+#         self.model.encoder.load_state_dict(state_dict)
+#         # Ensure model is in float16 precision
+#         self.model.float()
+#         print(self.device)
+#         self.model.to(self.device)
+
+
+
+def setup_segmentation_model(config, class_values=None):
+    if class_values is None:
+        raise ValueError("class_values must be provided and should not be None")
     
 
+    # Determine number of classes
+    num_classes = len(class_values)
+    
+#         # encoder name and weights
+    encoder_name = config["model"]["name"]
+    encoder_weights = config['model']['weights']
 
-        
+    # Define activation function based on number of classes
+    activation = 'softmax2d' if num_classes > 1 else 'sigmoid'
+    
+    # Initialize U-Net++ model
+    model = UnetPlusPlus(
+        encoder_name=encoder_name,
+        encoder_weights=None,  # Skip default weight loading
+        in_channels=3,
+        classes=num_classes,
+        activation=activation
+    )
+    
+    # Determine device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    map_location = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    # Load custom weights
+    url = get_pretrained_microscopynet_url(encoder_name, encoder_weights)
+    state_dict = model_zoo.load_url(url, map_location=map_location)
+    model.encoder.load_state_dict(state_dict)
+    
+    # Move model to the appropriate device
+    model = model.to(device)
+    
+    return model, device
+
 
 

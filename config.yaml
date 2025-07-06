@@ -1,5 +1,6 @@
 model:
   name: "resnet50"
+  weights: 'micronet'
 
 dataloader:
   batch_size: 4
@@ -7,9 +8,11 @@ dataloader:
   num_workers: 1
 
 training:
-  epochs: 100
-  learning_rate: 0.001
+  epochs: 10
+  learning_rate: 2e-4
   bce_weight: 0.5
+  patience: 2
+  checkpoint_interval: 2
 
 data:
   base_path: "./Super1"
