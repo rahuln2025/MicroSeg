@@ -2,9 +2,9 @@ import os
 import numpy as np
 import cv2
 import random
-import almbumenations as A
-from albumenations import Compose, Normalize, Resize
-from albumenations.pytorch import ToTensorV2
+import albumentations as A
+from albumentations import Compose, Normalize, Resize
+from albumentations.pytorch import ToTensorV2
 from torch.utils.data import Dataset
 from segmentation_models_pytorch.encoders import get_preprocessing_params
 import yaml
@@ -81,15 +81,17 @@ class MicrostructureDataset(Dataset):
         return image, mask
 
 
-def preprocessing_params(mean=None, std=None, model ='resnet50'):
+def preprocessing_params(model, mean=None, std=None):
     """
     Get preprocessing parameters for the model.
     If mean and std are not provided, they will be fetched based on the model name.
     """
 
     if mean is None or std is None:
-        mean, std = get_preprocessing_params(model_name=model)
-    
+        params = get_preprocessing_params(model)
+        mean = params['mean']
+        std = params['std']
+        
     return mean, std
 
 
@@ -97,7 +99,7 @@ def preprocessing_params(mean=None, std=None, model ='resnet50'):
 # class for image augmentation
 class ImageAugmentation:
     def __init__(self, model=None):
-
+        print(f"model_name:{model}")
         self.mean, self.std = preprocessing_params(model)
         self.transform = A.Compose([
         A.HorizontalFlip(p=0.75),
