@@ -38,13 +38,14 @@ def visualize_augmentations(dataset, num_samples=4, save_path = None):
 
 
 # Function to visualize predictions and true masks
-def visualize_predictions(model, test_dataset, device, num_samples=4, save_path = None):
+def visualize_predictions(model, test_dataset, test_viz_dataset, device, num_samples=4, save_path = None):
     model.eval()
     fig, axs = plt.subplots(2 * num_samples, 4, figsize=(20, 10 * num_samples))
 
     for i in range(num_samples):
         idx = random.randint(0, len(test_dataset) - 1)
         image, true_mask = test_dataset[idx]
+        viz_image, _ = test_viz_dataset[idx]
         image = image.to(device).unsqueeze(0)
 
         with torch.no_grad():
@@ -55,7 +56,7 @@ def visualize_predictions(model, test_dataset, device, num_samples=4, save_path 
                 output = torch.softmax(output, dim=1)
             output = output.squeeze().cpu().numpy()
 
-        image = image.squeeze().permute(1, 2, 0).cpu().numpy()
+        image = viz_image.squeeze().permute(1, 2, 0).cpu().numpy()
         true_mask = true_mask.cpu().numpy()  # Ensure correct shape
 
         # Plot original image

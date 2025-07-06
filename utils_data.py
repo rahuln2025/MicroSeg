@@ -131,3 +131,9 @@ def ValAugmentation(mean, std):
         A.Normalize(mean=mean, std=std),
         ToTensorV2()
     ])
+
+def NoAugmentation():
+    return A.Compose([
+        A.ToFloat(),  # Convert to float [0, 1] without normalization
+        ToTensorV2()
+    ])

@@ -32,6 +32,10 @@ def main():
     test_augmentation = ValAugmentation(mean, std)
     test_dataset = MicrostructureDataset(test_images_dir, test_masks_dir, transform = test_augmentation)
 
+    # no augmentation dataset for visualizations
+    no_augmentation = NoAugmentation()
+    test_viz_dataset = MicrostructureDataset(test_images_dir, test_masks_dir, transform = no_augmentation)
+
     # dataloader
     test_loader = DataLoader(test_dataset,
                             batch_size = 1, 
@@ -43,7 +47,7 @@ def main():
     model, device = setup_segmentation_model(class_values = class_values, config=config)
     
     checkpoint_dir = config['training'].get('checkpoint_dir')
-    best_model_path = best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
+    best_model_path = best_model_path = os.path.join(checkpoint_dir, 'model_checkpoint_epoch_90.pth')
     model.load_state_dict(torch.load(best_model_path))
 
     # evaluate model on test data
@@ -57,8 +61,8 @@ def main():
     prediction_plot = os.path.join(config['dirs']['plots_dir'], 'test_predictions.png')
     prediction_accuracy_plot = os.path.join(config['dirs']['plots_dir'], 'test_pred_accuracy.png')
 
-    visualize_predictions(model, test_dataset, device, save_path = prediction_plot)
-    visualize_prediction_accuracy_2(model, test_dataset, device, save_path = prediction_accuracy_plot)
+    visualize_predictions(model, test_dataset, test_viz_dataset, device, save_path = prediction_plot)
+    visualize_prediction_accuracy_2(model, test_viz_dataset, device, save_path = prediction_accuracy_plot)
 
 if __name__ == "__main__":
     main()
