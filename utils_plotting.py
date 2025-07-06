@@ -6,7 +6,7 @@ import random
 import matplotlib.patches as mpatches
 
 # Function to visualize augmented images and their masks
-def visualize_augmentations(dataset, num_samples=4, save_path = "augmentations.png"):
+def visualize_augmentations(dataset, num_samples=4, save_path = None):
     fig, axs = plt.subplots(num_samples, 4, figsize=(20, 5 * num_samples))
 
     for i in range(num_samples):
@@ -38,7 +38,7 @@ def visualize_augmentations(dataset, num_samples=4, save_path = "augmentations.p
 
 
 # Function to visualize predictions and true masks
-def visualize_predictions(model, test_dataset, device, num_samples=4):
+def visualize_predictions(model, test_dataset, device, num_samples=4, save_path = None):
     model.eval()
     fig, axs = plt.subplots(2 * num_samples, 4, figsize=(20, 10 * num_samples))
 
@@ -85,10 +85,12 @@ def visualize_predictions(model, test_dataset, device, num_samples=4):
             axs[2 * i + 1, j].axis('off')
 
     plt.tight_layout()
-    plt.show()
+    if save_path:
+        plt.savefig(save_path, dpi = 300)
+    #plt.show()
 
 
-def visualize_prediction_accuracy_2(model, test_dataset, device, num_samples=4):
+def visualize_prediction_accuracy_2(model, test_dataset, device, num_samples=4, save_path = None):
     model.eval()
     fig, axs = plt.subplots(num_samples, 4, figsize=(20, 5 * num_samples))
 
@@ -148,4 +150,6 @@ def visualize_prediction_accuracy_2(model, test_dataset, device, num_samples=4):
     pink_patch = mpatches.Patch(color='pink', label='False Negative')
     plt.legend(handles=[white_patch, black_patch, blue_patch, pink_patch], loc='upper right')
     plt.tight_layout()
-    plt.show()
+    if save_path:
+        plt.savefig(save_path, dpi = 300)
+    #plt.show()
